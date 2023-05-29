@@ -19,7 +19,6 @@ UPLOAD_FOLDER = 'uploads'
 label_dict={0:'caries', 1:'healthy'}
 
 def preprocess(img):
-
 	img=np.array(img)
 	img_batch = np.expand_dims(img, axis=0)
 	if(img.ndim==4):
@@ -27,7 +26,7 @@ def preprocess(img):
 	else:
 		gray=img
 
-	#gray = gray/255
+	gray = gray/255
 	
 	reshaped = resized.reshape(1,img_size,img_size,3)
 	reshaped = reshaped.astype('float32')
@@ -43,7 +42,7 @@ def allowed_file(filename):
 
 
 def predict(file):
-    img  = load_img(file, target_size=IMAGE_SIZE)
+    img = load_img(file, target_size=IMAGE_SIZE)
     img = img_to_array(img)
     img = np.expand_dims(img, axis=0)
     img = img.astype('float32')
@@ -56,8 +55,8 @@ def predict(file):
     result=np.argmax(probs,axis=1)[0]
     accuracy=float(np.max(probs,axis=1)[0])
     print(result)
-    output = str(label_dict[result])+" Accuracy"+str(accuracy) 
-    return output
+    output = str(label_dict[result])+" Accuracy - "+str(accuracy) 
+    return [output,img,probs]
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
@@ -65,7 +64,7 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 @app.route("/")
 def template_test():
-    return render_template('index.html', label='', imagesource='')
+    return render_template('index.html', label='', imagesource='',arr='',type='')
 
 output="null"
 @app.route('/', methods=['GET', 'POST'])
@@ -78,9 +77,8 @@ def upload_file():
             file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
             file.save(file_path)
             output = predict(file_path)
-        else:
-            print("output")
-    return render_template("index.html", label=output, imagesource=file_path)
+            print(output)
+    return render_template("index.html", label=output[0],arr=output[1],type=output[2], imagesource=file_path)
 
 
 @app.route('/uploads/<filename>')
